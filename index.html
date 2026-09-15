@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Comprador BSAR</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    margin: 0; min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 45%, #b8002e 100%);
+    color: #fff;
+  }
+  .caja {
+    text-align: center;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 12px;
+    padding: 40px 50px;
+    backdrop-filter: blur(6px);
+  }
+  h1 { font-size: 22px; margin-bottom: 10px; }
+  h1 span { color: #ff4d6d; }
+  .spinner {
+    width: 40px; height: 40px; margin: 20px auto;
+    border: 4px solid rgba(255,255,255,0.2);
+    border-top-color: #e4032e;
+    border-radius: 50%;
+    animation: girar 1s linear infinite;
+  }
+  @keyframes girar { to { transform: rotate(360deg); } }
+  #tiempo { font-size: 14px; color: #d9d9d9; margin-top: 10px; }
+  #error { color: #ff4d6d; margin-top: 16px; font-size: 13px; display:none; }
+</style>
+</head>
+<body>
+
+<div class="caja">
+  <h1>Generando <span>Comprador BSAR</span>...</h1>
+  <div class="spinner"></div>
+  <div id="tiempo">0.0s</div>
+  <div id="error"></div>
+</div>
+
+<script>
+const WEBHOOK_URL = "https://envy-recollect-last.ngrok-free.dev/webhook/comprador-bsar";
+const inicio = Date.now();
+const tiempoEl = document.getElementById('tiempo');
+const timer = setInterval(() => {
+  const seg = ((Date.now() - inicio) / 1000).toFixed(1);
+  tiempoEl.textContent = seg + 's';
+}, 100);
+
+fetch(WEBHOOK_URL, {
+  method: 'POST',
+  headers: { 'ngrok-skip-browser-warning': 'true' }
+})
+  .then(res => {
+    if (!res.ok) throw new Error('Respuesta ' + res.status);
+    return res.text();
+  })
+  .then(html => {
+    clearInterval(timer);
+    document.open();
+    document.write(html);
+    document.close();
+  })
+  .catch(err => {
+    clearInterval(timer);
+    document.getElementById('error').style.display = 'block';
+    document.getElementById('error').textContent = 'Error al generar: ' + err.message;
+  });
+</script>
+
+</body>
+</html>
