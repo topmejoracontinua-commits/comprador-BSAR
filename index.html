@@ -22,55 +22,84 @@
   }
   h1 { font-size: 22px; margin-bottom: 10px; }
   h1 span { color: #ff4d6d; }
+  p.subtitulo { font-size: 13px; color: #d9d9d9; margin-bottom: 24px; }
+
+  .btn-generar {
+    background: #e4032e; color: #fff; border: none; border-radius: 8px;
+    padding: 14px 32px; font-size: 15px; font-weight: 700; cursor: pointer;
+    transition: background 0.2s;
+  }
+  .btn-generar:hover { background: #b8002e; }
+  .btn-generar:disabled { background: #555; cursor: not-allowed; }
+
   .spinner {
-    width: 40px; height: 40px; margin: 20px auto;
+    display: none;
+    width: 40px; height: 40px; margin: 20px auto 0;
     border: 4px solid rgba(255,255,255,0.2);
     border-top-color: #e4032e;
     border-radius: 50%;
     animation: girar 1s linear infinite;
   }
   @keyframes girar { to { transform: rotate(360deg); } }
-  #tiempo { font-size: 14px; color: #d9d9d9; margin-top: 10px; }
-  #error { color: #ff4d6d; margin-top: 16px; font-size: 13px; display:none; }
+  #tiempo { display: none; font-size: 14px; color: #d9d9d9; margin-top: 10px; }
+  #error { color: #ff4d6d; margin-top: 16px; font-size: 13px; display: none; }
 </style>
 </head>
 <body>
 
 <div class="caja">
-  <h1>Generando <span>Comprador BSAR</span>...</h1>
-  <div class="spinner"></div>
+  <h1>Portal de Compras <span>Bridgestone</span></h1>
+  <p class="subtitulo">Catálogo con tendencia y sugerencia de compra (Motor JIT + CRM)</p>
+  <button class="btn-generar" id="btnGenerar" onclick="generar()">Generar Comprador BSAR</button>
+  <div class="spinner" id="spinner"></div>
   <div id="tiempo">0.0s</div>
   <div id="error"></div>
 </div>
 
 <script>
 const WEBHOOK_URL = "https://envy-recollect-last.ngrok-free.dev/webhook/comprador-bsar";
-const inicio = Date.now();
-const tiempoEl = document.getElementById('tiempo');
-const timer = setInterval(() => {
-  const seg = ((Date.now() - inicio) / 1000).toFixed(1);
-  tiempoEl.textContent = seg + 's';
-}, 100);
 
-fetch(WEBHOOK_URL, {
-  method: 'POST',
-  headers: { 'ngrok-skip-browser-warning': 'true' }
-})
-  .then(res => {
-    if (!res.ok) throw new Error('Respuesta ' + res.status);
-    return res.text();
+function generar() {
+  const boton = document.getElementById('btnGenerar');
+  const spinner = document.getElementById('spinner');
+  const tiempoEl = document.getElementById('tiempo');
+  const errorEl = document.getElementById('error');
+
+  boton.disabled = true;
+  boton.textContent = 'Generando...';
+  spinner.style.display = 'block';
+  tiempoEl.style.display = 'block';
+  errorEl.style.display = 'none';
+
+  const inicio = Date.now();
+  const timer = setInterval(() => {
+    const seg = ((Date.now() - inicio) / 1000).toFixed(1);
+    tiempoEl.textContent = seg + 's';
+  }, 100);
+
+  fetch(WEBHOOK_URL, {
+    method: 'POST',
+    headers: { 'ngrok-skip-browser-warning': 'true' }
   })
-  .then(html => {
-    clearInterval(timer);
-    document.open();
-    document.write(html);
-    document.close();
-  })
-  .catch(err => {
-    clearInterval(timer);
-    document.getElementById('error').style.display = 'block';
-    document.getElementById('error').textContent = 'Error al generar: ' + err.message;
-  });
+    .then(res => {
+      if (!res.ok) throw new Error('Respuesta ' + res.status);
+      return res.text();
+    })
+    .then(html => {
+      clearInterval(timer);
+      document.open();
+      document.write(html);
+      document.close();
+    })
+    .catch(err => {
+      clearInterval(timer);
+      boton.disabled = false;
+      boton.textContent = 'Generar Comprador BSAR';
+      spinner.style.display = 'none';
+      errorEl.style.display = 'block';
+      errorEl.textContent = 'Error al generar: ' + err.message;
+    });
+}
 </script>
 
 </body>
